@@ -134,6 +134,8 @@ class Bazinga(Plugin):
 
     def wantModule(self, m):
         source = inspect.getsourcefile(m)
+        if source is None:
+            return None
         self.updateGraph(source)
         if not self.dependenciesChanged(source):
             log.debug(
@@ -143,6 +145,8 @@ class Bazinga(Plugin):
 
     def wantClass(self, cls):
         source = inspect.getsourcefile(cls)
+        if source is None:
+            return None
         self.updateGraph(source)
         if not self.dependenciesChanged(source):
             log.debug(
