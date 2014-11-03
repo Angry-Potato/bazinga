@@ -10,7 +10,7 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, find_packages
 
-url = "https://github.com/jbochi/bazinga"
+url = "https://github.com/themattrix/bazinga"
 if os.path.exists("README.rst"):
     long_description = codecs.open("README.rst", "r", "utf-8").read()
 else:
@@ -18,7 +18,7 @@ else:
 
 setup(
 	name="Bazinga",
-	version="0.2.4",
+	version="0.2.5",
 	description="Bazinga is a nose plugin to run tests only if their dependencies were modified",
 	author="Juarez Bochi",
 	author_email="jbochi@gmail.com",
