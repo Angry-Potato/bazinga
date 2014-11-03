@@ -1,11 +1,10 @@
 import hashlib
 import inspect
-import imp
 import logging
 from nose.plugins import Plugin
 import os
 from snakefood.find import find_dependencies
-import sys
+
 
 try:
     from cpickle import dump, load
@@ -14,11 +13,11 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
+
 def file_hash(path):
-    f = open(path, 'rb')
-    h = hashlib.md5(f.read()).hexdigest()
-    f.close()
-    return h
+    with open(path, 'rb') as f:
+        return hashlib.md5(f.read()).hexdigest()
+
 
 class Bazinga(Plugin):
     name = 'bazinga'
@@ -50,12 +49,15 @@ class Bazinga(Plugin):
 
     def inspectDependencies(self, path):
         try:
-            files, _ = find_dependencies(path, verbose=False, process_pragmas=False)
+            files, _ = find_dependencies(
+                path, verbose=False, process_pragmas=False)
             log.debug('Dependencies found for file %s: %s' % (path, files))
         except TypeError, err:
             if path not in self._ignored_files:
                 self._ignored_files.add(path)
-                log.debug('Snakefood raised an error (%s) parsing path %s' % (err, path))
+                log.debug(
+                    'Snakefood raised an error (%s) parsing path %s' % (
+                        err, path))
                 return []
 
         valid_files = []
@@ -72,8 +74,8 @@ class Bazinga(Plugin):
         return valid_files
 
     def updateGraph(self, path):
-    log.debug(path)        
-	if path not in self._graph:
+        log.debug(path)
+        if path not in self._graph:
             if not self.fileChanged(path) and path in self._known_graph:
                 files = self._known_graph[path]
             else:
@@ -84,12 +86,14 @@ class Bazinga(Plugin):
 
     def fileChanged(self, path):
         if path in self._hashes:
-            hash = self._hashes[path]
+            hsh = self._hashes[path]
         else:
-            hash = file_hash(path)
-            self._hashes[path] = hash
+            hsh = file_hash(path)
+            self._hashes[path] = hsh
 
-        return path not in self._known_hashes or hash != self._known_hashes[path]
+        return (
+            path not in self._known_hashes or
+            hsh != self._known_hashes[path])
 
     def dependenciesChanged(self, path, parents=None):
         parents = parents or []
@@ -102,8 +106,10 @@ class Bazinga(Plugin):
         else:
             childs = self._graph[path]
             new_parents = parents + [path, ]
-            changed = any(self.dependenciesChanged(f, new_parents) for f in childs if
-                          f not in new_parents)
+            changed = any(
+                self.dependenciesChanged(f, new_parents) for
+                f in childs if
+                f not in new_parents)
 
             if changed:
                 log.debug('File depends on modified file: %s' % (path,))
@@ -130,12 +136,16 @@ class Bazinga(Plugin):
         source = inspect.getsourcefile(m)
         self.updateGraph(source)
         if not self.dependenciesChanged(source):
-            log.debug('Ignoring module %s, since no dependencies have changed' % (source,))
+            log.debug(
+                'Ignoring module %s, since no dependencies have changed' % (
+                    source,))
             return False
 
     def wantClass(self, cls):
         source = inspect.getsourcefile(cls)
         self.updateGraph(source)
         if not self.dependenciesChanged(source):
-            log.debug('Ignoring class %s, since no dependencies have changed' % (source,))
+            log.debug(
+                'Ignoring class %s, since no dependencies have changed' % (
+                    source,))
             return False
