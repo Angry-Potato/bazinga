@@ -2,7 +2,7 @@ import hashlib
 import inspect
 import logging
 from nose.plugins import Plugin
-import os
+from os.path import join, isfile
 from snakefood.find import find_dependencies
 
 
@@ -31,12 +31,11 @@ class Bazinga(Plugin):
     _ignored_files = set()
 
     def configure(self, options, conf):
-        self.hash_file = os.path.join(conf.workingDir, self.hash_file)
-        if os.path.isfile(self.hash_file):
+        self.hash_file = join(conf.workingDir, self.hash_file)
+        if isfile(self.hash_file):
             log.debug("Loading last known hashes and dependency graph")
-            f = open(self.hash_file, 'r')
-            data = load(f)
-            f.close()
+            with open(self.hash_file, 'r') as f:
+                data = load(f)
             self._known_hashes = data['hashes']
             self._known_graph = data['graph']
         Plugin.configure(self, options, conf)
@@ -62,11 +61,10 @@ class Bazinga(Plugin):
 
         valid_files = []
         for f in files:
-            if not os.path.isfile(f) and f not in self._ignored_files:
+            if not isfile(f) and f not in self._ignored_files:
                 self._ignored_files.add(f)
                 log.debug('Snakefood returned a wrong path: %s' % (f,))
-            elif (f in self._ignored_files):
-                self._ignored_files.add(f)
+            elif f in self._ignored_files:
                 log.debug('Ignoring built-in module: %s' % (f,))
             else:
                 valid_files.append(f)
@@ -105,7 +103,7 @@ class Bazinga(Plugin):
             changed = True
         else:
             childs = self._graph[path]
-            new_parents = parents + [path, ]
+            new_parents = parents + [path]
             changed = any(
                 self.dependenciesChanged(f, new_parents) for
                 f in childs if
@@ -128,9 +126,8 @@ class Bazinga(Plugin):
             log.debug('Module failed: %s' % (m,))
             self._hashes.pop(m, None)
 
-        f = open(self.hash_file, 'w')
-        dump({'hashes': self._hashes, 'graph': self._graph}, f)
-        f.close()
+        with open(self.hash_file, 'w') as f:
+            dump({'hashes': self._hashes, 'graph': self._graph}, f)
 
     def wantModule(self, m):
         source = inspect.getsourcefile(m)
