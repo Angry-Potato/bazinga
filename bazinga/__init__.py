@@ -51,7 +51,7 @@ class Bazinga(Plugin):
             files, _ = find_dependencies(
                 path, verbose=False, process_pragmas=False)
             log.debug('Dependencies found for file %s: %s' % (path, files))
-        except TypeError, err:
+        except TypeError as err:
             if path not in self._ignored_files:
                 self._ignored_files.add(path)
                 log.debug(
@@ -116,10 +116,10 @@ class Bazinga(Plugin):
         return changed
 
     def finalize(self, result):
-        for k, v in self._known_hashes.iteritems():
+        for k, v in self._known_hashes.items():
             self._hashes.setdefault(k, v)
 
-        for k, v in self._known_graph.iteritems():
+        for k, v in self._known_graph.items():
             self._graph.setdefault(k, v)
 
         for m in self._failed_test_modules:
